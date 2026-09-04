@@ -1,0 +1,21 @@
+name: Trade Setup Bot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 8 * * *'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: pip install -r trade_bot/requirements.txt
+      - name: Validate modules
+        env:
+          PYTHONPATH: .
+        run: python -m compileall -q trade_bot
