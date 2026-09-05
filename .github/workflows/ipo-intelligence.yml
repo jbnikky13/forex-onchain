@@ -1,0 +1,39 @@
+name: IPO & Pre-Listing Intelligence
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ipo-intelligence
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Scan official IPO sources
+        run: python ipo_financial_intelligence.py
+      - name: Persist intelligence state
+        if: always()
+        run: |
+          if [ -f data/ipo_intelligence_state.json ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add data/ipo_intelligence_state.json
+            git diff --cached --quiet || git commit -m "chore: update IPO intelligence state"
+            git push
+          fi
